@@ -4,6 +4,7 @@ Script to load geographical data into a pandas DataFrame, and save it as a CSV f
 
 from geopy.geocoders import Nominatim
 import pandas as pd
+import numpy as np 
 
 
 def get_geolocator(agent='h501-student'):
@@ -20,22 +21,40 @@ def get_geolocator(agent='h501-student'):
 def fetch_location_data(geolocator, loc):
     location = geolocator.geocode(loc)
 
-    if location is None:
-        return None
+    # if location is None:
+    #     return None
     
-    return {"location": loc, "latitude": location.latitude, "longitude": location.longitude, "type": location.geo_type}
+    # return {"location": loc, "latitude": location.latitude, "longitude": location.longitude, "address": location.address}
 
-def build_geo_dataframe(locations):
+
+    if location is None:
+        return {
+            "location": loc, 
+            "latitude": np.nan, 
+            "longitude": np.nan, 
+            "address": np.nan
+        }
+    
+    return {
+        "location": loc, 
+        "latitude": location.latitude, 
+        "longitude": location.longitude, 
+        "address": location.address
+    }
+
+def build_geo_dataframe(geolocator, locations):
     geo_data = [fetch_location_data(geolocator, loc) for loc in locations]
+
+    geo_data = [row for row in geo_data if row is not None]
     
     return pd.DataFrame(geo_data)
 
 
 if __name__ == "__main__":
-    geo = get_geolocator()
+    geolocator = get_geolocator()
 
     locations = ["Museum of Modern Art", "iuyt8765(*&)", "Alaska", "Franklin's Barbecue", "Burj Khalifa"]
 
-    df = build_geo_dataframe(locations)
+    df = build_geo_dataframe(geolocator, locations)
 
-    df.to_csv("./geo_data.csv")
+    df.to_csv("./geo_data.csv", index = False)
